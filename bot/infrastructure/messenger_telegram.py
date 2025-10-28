@@ -10,6 +10,7 @@ load_dotenv()
 
 
 class MessengerTelegram(Messenger):
+
     def _get_telegram_base_uri(self) -> str:
         return f"https://api.telegram.org/bot{os.getenv('TELEGRAM_TOKEN')}"
 
@@ -31,25 +32,16 @@ class MessengerTelegram(Messenger):
         with urllib.request.urlopen(request) as response:
             response_body = response.read().decode("utf-8")
             response_json = json.loads(response_body)
-            assert response_json["ok"] == True  # noqa: E712
+            assert response_json["ok"]
             return response_json["result"]
 
     def send_message(self, chat_id: int, text: str, **kwargs) -> dict:
-        """
-        https://core.telegram.org/bots/api#sendmessage
-        """
         return self._make_request("sendMessage", chat_id=chat_id, text=text, **kwargs)
 
     def get_updates(self, **kwargs) -> dict:
-        """
-        https://core.telegram.org/bots/api#getupdates
-        """
         return self._make_request("getUpdates", **kwargs)
 
     def answer_callback_query(self, callback_query_id: str, **kwargs) -> dict:
-        """
-        https://core.telegram.org/bots/api#answercallbackquery
-        """
         return self._make_request(
             "answerCallbackQuery",
             callback_query_id=callback_query_id,
@@ -57,9 +49,6 @@ class MessengerTelegram(Messenger):
         )
 
     def delete_message(self, chat_id: int, message_id: int) -> dict:
-        """
-        https://core.telegram.org/bots/api#deletemessage
-        """
         return self._make_request(
             "deleteMessage",
             chat_id=chat_id,

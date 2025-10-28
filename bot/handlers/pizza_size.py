@@ -1,11 +1,18 @@
-import bot.telegram_client
-import bot.database_client
+from bot.domain.messenger import Messenger
+from bot.domain.storage import Storage
 from bot.handlers.handler import Handler, HandlerStatus
 from bot.keyboards.order_keyboards import drink_keyboard
 
 
-class PizzaSize(Handler):
-    def can_handle(self, update: dict, state: str, order_json: dict) -> bool:
+class PizzaSizeHandler(Handler):
+    def can_handle(
+        self,
+        update: dict,
+        state: str,
+        order_json: dict,
+        storage: Storage,
+        messenger: Messenger,
+    ) -> bool:
         if "callback_query" not in update:
             return False
 
@@ -15,30 +22,37 @@ class PizzaSize(Handler):
         callback_data = update["callback_query"]["data"]
         return callback_data.startswith("size_")
 
-    def handle(self, update: dict, state: str, order_json: dict) -> HandlerStatus:
+    def handle(
+        self,
+        update: dict,
+        state: str,
+        order_json: dict,
+        storage: Storage,
+        messenger: Messenger,
+    ) -> HandlerStatus:
         telegram_id = update["callback_query"]["from"]["id"]
         callback_data = update["callback_query"]["data"]
 
         size_mapping = {
-            "size_small": "Small (25sm)",
-            "size_medium": "Medium (30sm)",
-            "size_large": "Large (35sm)",
-            "size_xl": "Extra Large (40sm)",
+            "size_small": "Small (25cm)",
+            "size_medium": "Medium (30cm)",
+            "size_large": "Large (35cm)",
+            "size_xl": "Extra Large (40cm)",
         }
 
         pizza_size = size_mapping.get(callback_data)
         order_json["pizza_size"] = pizza_size
-        bot.database_client.update_user_data(telegram_id, order_json)
-        bot.database_client.update_user_state(telegram_id, "WAIT_FOR_DRINKS")
+        storage.update_user_order_json(telegram_id, order_json)
+        storage.update_user_state(telegram_id, "WAIT_FOR_DRINKS")
 
-        bot.telegram_client.answer_callback_query(update["callback_query"]["id"])
+        messenger.answer_callback_query(update["callback_query"]["id"])
 
-        bot.telegram_client.deleteMessage(
+        messenger.delete_message(
             chat_id=update["callback_query"]["message"]["chat"]["id"],
             message_id=update["callback_query"]["message"]["message_id"],
         )
 
-        bot.telegram_client.sendMessage(
+        messenger.send_message(
             chat_id=update["callback_query"]["message"]["chat"]["id"],
             text="🍾Please, choose a drink:",
             reply_markup=drink_keyboard(),
