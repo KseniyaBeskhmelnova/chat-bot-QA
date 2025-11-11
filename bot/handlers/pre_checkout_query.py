@@ -1,10 +1,10 @@
 from bot.domain.messenger import Messenger
-from bot.handlers.handler import Handler, HandlerStatus
-from bot.domain.storage import Storage
 from bot.domain.order_state import OrderState
+from bot.domain.storage import Storage
+from bot.handlers.handler import Handler, HandlerStatus
 
 
-class EnsureUserExists(Handler):
+class PreCheckoutQueryHandler(Handler):
     def can_handle(
         self,
         update: dict,
@@ -13,7 +13,7 @@ class EnsureUserExists(Handler):
         storage: Storage,
         messenger: Messenger,
     ) -> bool:
-        return "message" in update and "from" in update["message"]
+        return "pre_checkout_query" in update
 
     def handle(
         self,
@@ -23,8 +23,11 @@ class EnsureUserExists(Handler):
         storage: Storage,
         messenger: Messenger,
     ) -> HandlerStatus:
-        telegram_id = update["message"]["from"]["id"]
+        pre_checkout_query = update["pre_checkout_query"]
+        pre_checkout_query_id = pre_checkout_query["id"]
 
-        storage.ensure_user_exists(telegram_id)
+        messenger.answer_pre_checkout_query(
+            pre_checkout_query_id=pre_checkout_query_id, ok=True
+        )
 
-        return HandlerStatus.CONTINUE
+        return HandlerStatus.STOP

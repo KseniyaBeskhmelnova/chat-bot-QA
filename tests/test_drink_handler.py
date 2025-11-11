@@ -1,5 +1,6 @@
 from bot.dispatcher import Dispatcher
 from bot.handlers.drink_selection import DrinkHandler
+from bot.domain.order_state import OrderState
 from tests.mocks import Mock
 
 
@@ -27,9 +28,9 @@ def test_drink_handler():
         nonlocal update_user_order_json_called
         update_user_order_json_called = True
 
-    def update_user_state(telegram_id: int, state: str) -> None:
+    def update_user_state(telegram_id: int, state: OrderState) -> None:
         assert telegram_id == 12345
-        assert state == "ORDER_REVIEW"
+        assert state == OrderState.WAIT_FOR_ORDER_APPROVE
         nonlocal update_user_state_called
         update_user_state_called = True
 

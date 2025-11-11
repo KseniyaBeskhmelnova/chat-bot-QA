@@ -58,8 +58,8 @@ def confirm_keyboard() -> dict:
     return {
         "inline_keyboard": [
             [
-                {"text": "✅ Confirm Order", "callback_data": "action_confirm"},
-                {"text": "🔁 Start Again", "callback_data": "action_restart"},
+                {"text": "✅ Confirm Order", "callback_data": "order_approve"},
+                {"text": "🔁 Start Again", "callback_data": "order_restart"},
             ]
         ]
     }
