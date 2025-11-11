@@ -28,9 +28,7 @@ if [ -d "tests" ]; then
 fi
 
 echo "🗃️ Initializing database"
-PYTHONPATH=. python3 bot/recreate_database.py
+PYTHONPATH=. python3 bot/recreate_database_postgres.py
 
 echo "🤖 Launching bot"
 PYTHONPATH=. python3 -m bot
-
-echo "✅ Bot is running"
