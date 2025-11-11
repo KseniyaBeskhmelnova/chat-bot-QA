@@ -3,7 +3,8 @@ from bot.handlers.order_approval_approved import OrderApprovalApprovedHandler
 from tests.mocks import Mock
 
 
-def test_order_approval_approved_handler():
+def test_order_approval_approved_handler(monkeypatch):
+    monkeypatch.setenv("YOOKASSA_TOKEN", "381764678:TEST:151029")
     test_update = {
         "update_id": 123456789,
         "callback_query": {
