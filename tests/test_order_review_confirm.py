@@ -1,9 +1,12 @@
+import pytest
+
 from bot.dispatcher import Dispatcher
 from bot.handlers.order_approval_approved import OrderApprovalApprovedHandler
 from tests.mocks import Mock
 
 
-def test_order_approval_approved_handler(monkeypatch):
+@pytest.mark.asyncio
+async def test_order_approval_approved_handler(monkeypatch):
     monkeypatch.setenv("YOOKASSA_TOKEN", "381764678:TEST:151029")
     test_update = {
         "update_id": 123456789,
@@ -21,13 +24,13 @@ def test_order_approval_approved_handler(monkeypatch):
     update_user_state_called = False
     send_invoice_called = False
 
-    def update_user_state(telegram_id: int, state: str) -> None:
+    async def update_user_state(telegram_id: int, state: str) -> None:
         assert telegram_id == 12345
         assert state == "WAIT_FOR_PAYMENT"
         nonlocal update_user_state_called
         update_user_state_called = True
 
-    def send_invoice(
+    async def send_invoice(
         chat_id: int,
         title: str,
         description: str,
@@ -52,10 +55,10 @@ def test_order_approval_approved_handler(monkeypatch):
         send_invoice_called = True
         return {"ok": True}
 
-    def answer_callback_query(callback_query_id: str) -> None:
+    async def answer_callback_query(callback_query_id: str) -> None:
         assert callback_query_id == "123"
 
-    def delete_message(chat_id: int, message_id: int) -> None:
+    async def delete_message(chat_id: int, message_id: int) -> None:
         assert chat_id == 12345
         assert message_id == 10
 
@@ -75,12 +78,15 @@ def test_order_approval_approved_handler(monkeypatch):
     dispatcher = Dispatcher(mock_storage, mock_messenger)
     dispatcher.add_handlers(OrderApprovalApprovedHandler())
 
-    dispatcher._storage.get_user = lambda tid: {
-        "state": "WAIT_FOR_ORDER_APPROVE",
-        "order_json": '{"pizza_name": "Pepperoni", "pizza_size": "Medium (30cm)", "drink": "Coca-Cola"}',
-    }
+    async def mock_get_user(tid):
+        return {
+            "state": "WAIT_FOR_ORDER_APPROVE",
+            "order_json": '{"pizza_name": "Pepperoni", "pizza_size": "Medium (30cm)", "drink": "Coca-Cola"}',
+        }
 
-    dispatcher.dispatch(test_update)
+    dispatcher._storage.get_user = mock_get_user
+
+    await dispatcher.dispatch(test_update)
 
     assert update_user_state_called
     assert send_invoice_called

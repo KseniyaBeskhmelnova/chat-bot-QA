@@ -1,3 +1,5 @@
+import asyncio
+
 from bot.domain.messenger import Messenger
 from bot.domain.storage import Storage
 from bot.handlers.handler import Handler, HandlerStatus
@@ -22,7 +24,7 @@ class DrinkHandler(Handler):
         callback_data = update["callback_query"]["data"]
         return callback_data.startswith("drink_")
 
-    def handle(
+    async def handle(
         self,
         update: dict,
         state: OrderState,
@@ -52,9 +54,15 @@ class DrinkHandler(Handler):
             drink = drink_mapping.get(callback_data, "Unknown")
 
         order_json["drink"] = drink
-        storage.update_user_order_json(telegram_id, order_json)
 
-        storage.update_user_state(telegram_id, OrderState.WAIT_FOR_ORDER_APPROVE)
+        chat_id = update["callback_query"]["message"]["chat"]["id"]
+        callback_query_id = update["callback_query"]["id"]
+
+        await asyncio.gather(
+            storage.update_user_order_json(telegram_id, order_json),
+            storage.update_user_state(telegram_id, OrderState.WAIT_FOR_ORDER_APPROVE),
+            messenger.answer_callback_query(callback_query_id),
+        )
 
         pizza_name = order_json.get("pizza_name", "Unknown")
         pizza_size = order_json.get("pizza_size", "Unknown")
@@ -69,7 +77,7 @@ class DrinkHandler(Handler):
 
         reply_markup = confirm_keyboard()
 
-        messenger.send_message(
+        await messenger.send_message(
             chat_id=chat_id,
             text=order_text,
             reply_markup=reply_markup,

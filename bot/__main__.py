@@ -1,3 +1,5 @@
+import asyncio
+
 from bot.dispatcher import Dispatcher
 from bot.handlers import get_handlers
 from bot.domain.messenger import Messenger
@@ -7,18 +9,23 @@ from bot.infrastructure.storage_postgres import StoragePostgres
 import bot.long_polling
 
 
-def main() -> None:
-    try:
-        storage: Storage = StoragePostgres()
-        messenger: Messenger = MessengerTelegram()
+async def main() -> None:
+    storage: Storage = StoragePostgres()
+    messenger: Messenger = MessengerTelegram()
 
+    try:
         dispatcher = Dispatcher(storage, messenger)
         dispatcher.add_handlers(*get_handlers())
         print("✅ Bot is running")
-        bot.long_polling.start_long_polling(dispatcher, messenger)
+        await bot.long_polling.start_long_polling(dispatcher, messenger)
     except KeyboardInterrupt:
         print("\nBye!")
+    finally:
+        if hasattr(messenger, "close"):
+            await messenger.close()
+        if hasattr(storage, "close"):
+            await storage.close()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
