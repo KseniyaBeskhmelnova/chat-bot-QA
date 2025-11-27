@@ -243,7 +243,7 @@ class StoragePostgres(Storage):
                         "INSERT INTO users (telegram_id, state, order_json) VALUES ($1, $2, $3)",
                         telegram_id,
                         "WAIT_FOR_PIZZA_NAME",
-                        "{}"
+                        "{}",
                     )
 
             duration_ms = (time.time() - start_time) * 1000
