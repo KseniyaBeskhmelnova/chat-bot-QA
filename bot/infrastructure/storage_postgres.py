@@ -238,11 +238,13 @@ class StoragePostgres(Storage):
                     telegram_id,
                 )
 
-            if result is None:
-                await conn.execute(
-                    "INSERT INTO users (telegram_id) VALUES ($1)",
-                    telegram_id,
-                )
+                if result is None:
+                    await conn.execute(
+                        "INSERT INTO users (telegram_id, state, order_json) VALUES ($1, $2, $3)",
+                        telegram_id,
+                        "WAIT_FOR_PIZZA_NAME",
+                        "{}"
+                    )
 
             duration_ms = (time.time() - start_time) * 1000
             logger.info(f"[DB] ← {method_name} - {duration_ms:.2f}ms")

@@ -36,12 +36,6 @@ class DrinkHandler(Handler):
         callback_data = update["callback_query"]["data"]
         chat_id = update["callback_query"]["message"]["chat"]["id"]
 
-        messenger.answer_callback_query(update["callback_query"]["id"])
-        messenger.delete_message(
-            chat_id=chat_id,
-            message_id=update["callback_query"]["message"]["message_id"],
-        )
-
         if callback_data == "drink_none":
             drink = "No drinks"
         else:
@@ -77,11 +71,17 @@ class DrinkHandler(Handler):
 
         reply_markup = confirm_keyboard()
 
-        await messenger.send_message(
-            chat_id=chat_id,
-            text=order_text,
-            reply_markup=reply_markup,
-            parse_mode="HTML",
+        await asyncio.gather(
+            messenger.delete_message(
+                chat_id=chat_id,
+                message_id=update["callback_query"]["message"]["message_id"],
+            ),
+            messenger.send_message(
+                chat_id=chat_id,
+                text=order_text,
+                reply_markup=reply_markup,
+                parse_mode="HTML",
+            ),
         )
 
         return HandlerStatus.STOP
